@@ -1,14 +1,10 @@
-import psycopg2
+from src.services.DataBaseService import DataBaseService
 
-conn = psycopg2.connect(database="technopark", user="postgres", password="12345", host="127.0.0.1", port="5432")
+my_db = DataBaseService()
 
-cur = conn.cursor()
 
 # db_create = open('../dbscheme.sql', 'r').read()
 #
-# cur.execute(db_create)
+# db_service.execute(db_create)
 
 print("Table created successfully")
-
-conn.commit()
-conn.close()

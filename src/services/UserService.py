@@ -1,32 +1,74 @@
 from src.models.UserModel import UserModel
-from src.services import *
+from .DataBaseService import db_service
+import psycopg2
 
 class UserService:
-    def user_create(self, data):
-        print(data)
-        new_user = UserModel()
-        new_user.fill_info(data['nickname'], data['about'], data['email'], data['fullname'])
-        conn = psycopg2.connect(database="technopark", user="postgres", password="12345", host="127.0.0.1", port="5432")
-        cur = conn.cursor()
+    def get_user_id(self, nickname):
+        cmd = '''SELECT id FROM "user" WHERE nickname = '{nickname}'
+        '''.format(nickname=nickname)
 
+        db_service.execute(cmd)
+        return db_service.get_result()[0]
+
+    def create(self, data):
         try:
             insert_cmd = '''INSERT INTO "user" (nickname, about, email, fullname) 
-                            VALUES ('{nickname}', '{about}', '{email}', '{fullname}');'''.format(
-                nickname=data['nickname'], about=data['about'], email=data['email'], fullname=data['fullname'])
+                            VALUES ('{nickname}', '{about}', '{email}', '{fullname}');'''.format(**data)
 
-            cur.execute(insert_cmd)
-            conn.commit()
+            db_service.execute(insert_cmd)
+            result = data
+            status = 201
+
+        except psycopg2.IntegrityError:
+            db_service.reconnect()
+            select_cmd = '''SELECT * FROM "user" WHERE nickname = '{nickname}' OR email = '{email}';
+            '''.format(**data)
+            db_service.execute(select_cmd)
+            result = db_service.get_result()
+            status = 409
+
+        return (status, result)
+
+    def update(self, data):
+        insert_cmd = """UPDATE "user" SET about = '{about}', email = '{email}', fullname = '{fullname}'
+                        WHERE nickname = '{nickname}';""".format(**data)
+
+        db_service.execute(insert_cmd)
+        db_service.reconnect()
+
+        return data
+
+    def get(self, data):
+        try:
+            insert_cmd = """SELECT about, email, fullname FROM "user"
+                            WHERE nickname = '{nickname}';""".format(
+                nickname=data['nickname'])
+
+            db_service.execute(insert_cmd)
+            arr = db_service.get_result()[0]
+            result = {'about': arr[0], 'email': arr[1], 'fullname': arr[2], 'nickname': data['nickname']}
+            status = 200
 
         except:
-            conn.close()
-            conn = psycopg2.connect(database="technopark", user="postgres", password="12345", host="127.0.0.1",
-                                    port="5432")
-            cur = conn.cursor()
-            select_cmd = '''SELECT * FROM "user" WHERE nickname = '{nickname}';
-            '''.format(nickname=data['nickname'])
-            cur.execute(select_cmd)
-            conn.commit()
-            print(cur.fetchall())
-            conn.close()
+            status = 409
+            db_service.reconnect()
+            select_cmd = '''SELECT id FROM "user" WHERE nickname = '{nickname}';
+                                '''.format(**data)
+            db_service.execute(select_cmd)
+            result = {'message': "Can't find user with id #{id}\n".format(id=db_service.get_result()[0])}
 
-        return new_user
+        return (status, result)
+
+    def check_errors(self, data):
+        check_cmd = """SELECT CASE WHEN 
+                        ( SELECT nickname FROM "user" WHERE nickname <> '{nickname}' AND LOWER(email) <> LOWER('{email}') LIMIT 1) 
+                        IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict",
+                        CASE WHEN 
+                        (SELECT nickname FROM "user" WHERE nickname = '{nickname}' LIMIT 1) 
+                        IS NOT NULL THEN FALSE ELSE TRUE END AS "notfound";
+        """.format(**data)
+
+        db_service.execute(check_cmd)
+        return db_service.get_result()[0]
+
+user_service = UserService()
