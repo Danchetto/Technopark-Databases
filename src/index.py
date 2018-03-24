@@ -3,7 +3,7 @@ import tornado.web
 import postgresql
 from src.urls import *
 
-PORT = 8888
+PORT = 5000
 
 def make_app():
     return tornado.web.Application(urls)
