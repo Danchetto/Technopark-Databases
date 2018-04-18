@@ -15,7 +15,6 @@ class UserCreateHandler(tornado.web.RequestHandler):
             return
         self.set_status(409)
         users = user_service.get_users_by_email_or_nick(data)
-        print(users)
         self.write(tornado.escape.json_encode(users))
         return
 
@@ -26,7 +25,7 @@ class UserProfileHandler(tornado.web.RequestHandler):
         data = {'nickname': nickname}
         self.set_header("Content-Type", "application/json")
 
-        response = user_service.get_user(data)
+        response = user_service.get_user(data['nickname'])
         status = 200 if response else 404
         self.set_status(status)
         self.write(tornado.escape.json_encode(response))
@@ -35,27 +34,27 @@ class UserProfileHandler(tornado.web.RequestHandler):
 
     def post(self, nickname):
         self.set_header("Content-Type", "application/json")
-        user = user_service.get_user({'nickname': nickname})
         data = tornado.escape.json_decode(self.request.body)
-        if user:
-            for key in user.keys():
-                    if key not in data.keys():
-                        data[key] = user[key]
+        data.update({'nickname': nickname})
 
-            errors = user_service.check_errors(data)
+        errors = user_service.check_errors(data)
 
-            if errors['conflict']:
-                self.set_status(409)
-                error_result = {'message': "Can't find user"}
-                self.write(tornado.escape.json_encode(error_result))
-                return
-
-            self.set_status(200)
-            self.write(tornado.escape.json_encode(user_service.update(data)))
-
-        else:
+        if errors['conflict']:
+            self.set_status(409)
+            error_result = {'message': "Can't find user"}
+            self.write(tornado.escape.json_encode(error_result))
+            return
+        if errors['not_found']:
             self.set_status(404)
             error_result = {'message': "Can't find user"}
             self.write(tornado.escape.json_encode(error_result))
+            return
+
+        if 'email' not in data.keys():
+            email = user_service.get_user(nickname)['email']
+            data.update({'email': email})
+
+        self.set_status(200)
+        self.write(tornado.escape.json_encode(user_service.update(data)))
 
         return
