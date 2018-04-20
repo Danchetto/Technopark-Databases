@@ -1,14 +1,13 @@
-from .DataBaseService import db_service
-from src.tools.datetime import normalize_time, time_to_str
+from src.DataBase import db_service
+from src.tools.datetime import time_to_str
 
 class ThreadService:
     def get_thread_by_id(self, id):
-        cmd = """SELECT * FROM threads WHERE id = '{id}'
+        cmd = """SELECT * FROM threads WHERE id = {id}
                                 """.format(id=id)
 
         db_service.execute(cmd)
         result = db_service.get_one()
-        print(result)
         if 'created' in result.keys() and result['created'] is not None:
             result['created'] = time_to_str(result['created'])
         return result
@@ -19,7 +18,16 @@ class ThreadService:
 
         db_service.execute(cmd)
         result = db_service.get_one()
-        print(result)
+        if 'created' in result.keys() and result['created'] is not None:
+            result['created'] = time_to_str(result['created'])
+        return result
+
+    def get_thread_by_title(self, title):
+        cmd = """SELECT * FROM threads WHERE title = '{title}'
+                                """.format(title=title)
+
+        db_service.execute(cmd)
+        result = db_service.get_one()
         if 'created' in result.keys() and result['created'] is not None:
             result['created'] = time_to_str(result['created'])
         return result
@@ -58,39 +66,52 @@ class ThreadService:
 
         db_service.execute(cmd)
 
+    def vote(self, data):
+        cmd = '''INSERT INTO votes (username, voice, thread) VALUES ('{nickname}', {voice}, {thread});
+                  UPDATE threads SET votes = votes {number} WHERE id = {thread};
+        '''.format(**data, number='+ ' + data['vote'].__str__() if data['vote'] > 0 else ' ' + data['vote'].__str__())
+
+        db_service.execute(cmd)
+        return
 
     def check_errors(self, data):
-        db_service.reconnect()
-        cmd = """SELECT CASE WHEN
-                        (SELECT title FROM threads t WHERE t.title = '{title}'  LIMIT 1) 
-                        IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict",
-                        CASE WHEN 
+        # db_service.reconnect()
+        cmd = """SELECT CASE WHEN 
                         (SELECT nickname FROM users u WHERE u.nickname = '{author}' LIMIT 1)
-                        IS NOT NULL THEN FALSE ELSE TRUE END AS "user_not_found",
-                        CASE WHEN 
-                        (SELECT slug FROM forums f WHERE f.slug = '{forum}' LIMIT 1)
-                        IS NOT NULL THEN FALSE ELSE TRUE END AS "forum_not_found";
+                        IS NOT NULL THEN FALSE ELSE TRUE END AS "user_not_found";
                         """.format(**data)
         db_service.execute(cmd)
 
         return db_service.get_one()
 
-    def check_by_slug(self, data):
-        db_service.reconnect()
+    def check_by_slug(self, slug):
+        # db_service.reconnect()
         cmd = """SELECT CASE WHEN
                     (SELECT slug FROM threads t WHERE t.slug = '{slug}'  LIMIT 1) 
                     IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict";
-                    """.format(**data)
+                    """.format(slug=slug)
         db_service.execute(cmd)
 
         return db_service.get_one()
 
-    def check_by_id(self, data):
-        db_service.reconnect()
+    def check_by_id(self, id):
+        # db_service.reconnect()
         cmd = """SELECT CASE WHEN
                     (SELECT id FROM threads t WHERE t.id = '{id}'  LIMIT 1) 
                     IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict";
-                    """.format(**data)
+                    """.format(id=id)
+        db_service.execute(cmd)
+
+        return db_service.get_one()
+
+    def check_to_vote(self, data):
+        cmd = """SELECT CASE WHEN
+                            (SELECT username FROM votes v WHERE v.username = '{nickname}' AND v.thread = {thread} LIMIT 1) 
+                            IS NOT NULL THEN TRUE ELSE FALSE END AS "found",
+                            CASE WHEN
+                            (SELECT username FROM votes v WHERE v.username = '{nickname}' AND v.thread = {thread} AND voice = {voice} LIMIT 1) 
+                            IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict";
+                            """.format(**data)
         db_service.execute(cmd)
 
         return db_service.get_one()

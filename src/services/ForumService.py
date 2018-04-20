@@ -1,6 +1,6 @@
-from .DataBaseService import db_service
+from src.DataBase import db_service
 from ..services.UserService import user_service
-from src.tools.datetime import normalize_time, time_to_str
+from ..tools.datetime import normalize_time, time_to_db_str, time_to_str
 
 
 class ForumService:
@@ -40,21 +40,24 @@ class ForumService:
         return result
 
     def get_forum_threads(self, data):
-        cmd = """SELECT t.author, t.created, t.forum, t.id, t.message, t.slug, t.title, t.votes FROM forums f
-                JOIN threads t ON t.forum = f.title
-                WHERE f.slug = '{slug}'                                
+        cmd = """SELECT * FROM threads t
+                WHERE LOWER(t.forum) = LOWER('{slug}')                                
         """.format(**data)
 
         if data['since']:
             cmd += ' AND t.created'
             cmd += ' <= ' if data['desc'] else ' >= '
-            cmd += data['since']
+            cmd += "'" + data['since'] + "'"
 
         order = 'DESC' if data['desc'] else 'ASC'
         cmd += ' ORDER BY t.created ' + order + ' LIMIT ' + data['limit']
 
         db_service.execute(cmd)
-        return db_service.get_all()
+        result = db_service.get_all()
+        for thread in result:
+            thread['created'] = time_to_str(thread['created'])
+
+        return result
 
     def get_forum_users(self, data):
         cmd = """SELECT u.nickname  FROM users u
@@ -66,13 +69,16 @@ class ForumService:
         if data['since']:
             cmd += 'AND t.created'
             cmd += '<=' if data['desc'] else '>='
-            cmd += data['since'] + ' '
+            cmd += "'" + data['since'] + "'"
 
         order = 'DESC' if data['desc'] else 'ASC'
-        cmd += 'ORDER BY t.created ' + order + 'LIMIT' + data['limit']
+        cmd += ' ORDER BY t.created ' + order + 'LIMIT' + data['limit']
 
         db_service.execute(cmd)
-        return db_service.get_all()
+        result = db_service.get_all()
+        for thread in result:
+            thread['created'] = time_to_str(thread['created'])
+        return result
 
 
     def check_errors(self, data):

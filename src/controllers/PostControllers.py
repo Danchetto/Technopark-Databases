@@ -2,8 +2,6 @@ import tornado.web, tornado.escape
 from datetime import datetime
 from src.services.ThreadService import thread_service
 from src.services.PostService import post_service
-from src.services.ForumService import forum_service
-from src.tools.datetime import normalize_time
 
 class PostCreateHandler(tornado.web.RequestHandler):
     def post(self, slug_or_id):
@@ -21,12 +19,14 @@ class PostCreateHandler(tornado.web.RequestHandler):
 
         forum = thread_service.get_thread_by_id(thread_id)['forum']
 
-
         for post in data:
             post.update({'thread': thread_id, 'forum': forum, 'created': created})
 
-            errors = post_service.check_errors(post)
-            if errors['thread_not_found']:
+            if 'parent' not in post:
+                post.update({'parent': 0})
+            errors = post_service.check_errors(post) if post['parent'] > 0 else {'parent_not_found': False}
+            thread_found = thread_service.check_by_id(post['thread'])
+            if not thread_found['conflict']:
                 self.set_status(404)
                 self.write(tornado.escape.json_encode({'message': 'not found'}))
                 return
@@ -37,4 +37,4 @@ class PostCreateHandler(tornado.web.RequestHandler):
 
         post_service.create(data)
         self.set_status(201)
-        self.write(tornado.escape.json_encode(thread_service.create(data)))
+        self.write(tornado.escape.json_encode(post_service.create(data)))

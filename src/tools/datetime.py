@@ -5,3 +5,6 @@ def normalize_time(time):
 
 def time_to_str(time):
     return datetime.isoformat(time)
+
+def time_to_db_str(time):
+    return datetime.isoformat(time, sep=' ')

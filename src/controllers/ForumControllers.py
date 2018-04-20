@@ -40,7 +40,7 @@ class ForumDetailsHandler(tornado.web.RequestHandler):
 class ForumThreadsHandler(tornado.web.RequestHandler):
     def get(self, slug):
         self.set_header("Content-Type", "application/json")
-        # data = tornado.escape.json_decode(self.request.body)
+
         try:
             limit = self.get_argument('limit')
         except:
@@ -52,9 +52,9 @@ class ForumThreadsHandler(tornado.web.RequestHandler):
             since = None
 
         try:
-            desc = bool(self.get_argument('desc'))
+            desc = True if self.get_argument('desc') == 'true' else False
         except:
-            desc = None
+            desc = False
 
         data = {'slug': slug, 'limit': limit, 'since': since, 'desc': desc, 'user': ''}
         errors = forum_service.check_errors(data)
@@ -62,7 +62,6 @@ class ForumThreadsHandler(tornado.web.RequestHandler):
         if errors['conflict']:
             self.set_status(200)
             threads = forum_service.get_forum_threads(data)
-            print(threads)
             self.write(tornado.escape.json_encode(threads))
             return
         self.set_status(404)

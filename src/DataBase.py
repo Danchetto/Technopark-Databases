@@ -1,7 +1,7 @@
 import psycopg2
 import psycopg2.extras
 
-class DataBaseService:
+class DataBase:
     def __init__(self):
         self.conn = psycopg2.connect(database="technopark", user="postgres", password="12345", host="127.0.0.1",
                                      port="5432")
@@ -26,4 +26,4 @@ class DataBaseService:
     def close(self):
         self.conn.close()
 
-db_service = DataBaseService()
+db_service = DataBase()

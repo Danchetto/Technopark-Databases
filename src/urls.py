@@ -2,6 +2,7 @@ from src.controllers.UserControllers import *
 from src.controllers.ForumControllers import *
 from src.controllers.ThreadControllers import *
 from src.controllers.PostControllers import *
+from src.controllers.ServiceControllers import *
 from . import MainHandler
 
 urls = [
@@ -17,4 +18,8 @@ urls = [
 
     (r"/thread/(?P<slug_or_id>[^/]+?)/create", PostCreateHandler),
     (r"/thread/(?P<slug_or_id>[^/]+?)/details", ThreadDetailsHandler),
+    (r"/thread/(?P<slug_or_id>[^/]+?)/vote", ThreadVoteHandler),
+
+    (r"/service/clear", ClearHandler),
+    (r"/service/status", StatusHandler),
 ]

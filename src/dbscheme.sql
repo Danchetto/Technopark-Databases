@@ -1,3 +1,9 @@
+DROP TABLE IF EXISTS forums CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS threads CASCADE;
+DROP TABLE IF EXISTS posts CASCADE;
+DROP TABLE IF EXISTS votes CASCADE;
+
 CREATE EXTENSION IF NOT EXISTS CITEXT;
 
 CREATE TABLE users
@@ -45,8 +51,9 @@ CREATE TABLE posts (
 
 CREATE TABLE votes
 (
-  voice      INT CHECK (voice in (1, -1)),
-  nickname     CITEXT REFERENCES users (nickname)
---   threadid   BIGINT REFERENCES threads (id),
---   CONSTRAINT unique_vote UNIQUE (userid, threadid)
+  id        SERIAL      NOT NULL PRIMARY KEY,
+  username  VARCHAR     NOT NULL REFERENCES users(nickname),
+  voice     INTEGER,
+  thread    INTEGER     NOT NULL REFERENCES threads(id),
+  UNIQUE(username, thread)
 );

@@ -8,7 +8,6 @@ class UserCreateHandler(tornado.web.RequestHandler):
         data.update({'nickname': nickname})
 
         errors = user_service.check_errors(data)
-        print(errors)
         if errors['not_found'] and not errors['conflict']:
             self.set_status(201)
             self.write(tornado.escape.json_encode(user_service.create(data)))
