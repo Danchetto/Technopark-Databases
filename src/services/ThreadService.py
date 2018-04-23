@@ -74,6 +74,15 @@ class ThreadService:
         db_service.execute(cmd)
         return
 
+    def update_vote(self, data):
+        cmd = '''UPDATE votes SET voice = {voice} WHERE LOWER(username) = LOWER('{nickname}');
+                          UPDATE threads SET votes = votes {number} WHERE id = {thread};
+                '''.format(**data,
+                           number='+ ' + data['vote'].__str__() if data['vote'] > 0 else ' ' + data['vote'].__str__())
+
+        db_service.execute(cmd)
+        return
+
     def check_errors(self, data):
         # db_service.reconnect()
         cmd = """SELECT CASE WHEN 
@@ -115,5 +124,45 @@ class ThreadService:
         db_service.execute(cmd)
 
         return db_service.get_one()
+
+    def get_posts_flat(self, data):
+        cmd = """SELECT * FROM posts p
+                        WHERE p.thread = {id}                                
+                """.format(**data)
+
+        if data['since']:
+            cmd += ' AND p.id'
+            cmd += ' < ' if data['desc'] else ' > '
+            cmd += data['since'].__str__()
+
+        order = 'DESC' if data['desc'] else 'ASC'
+        cmd += ' ORDER BY p.created ' + order + ', id LIMIT ' + data['limit']
+
+        db_service.execute(cmd)
+        result = db_service.get_all()
+        for post in result:
+            post['created'] = time_to_str(post['created'])
+
+        return result
+
+    def get_posts_tree(self, data):
+        cmd = """SELECT * FROM posts p
+                        WHERE p.thread = {id}                                
+                """.format(**data)
+
+        if data['since']:
+            cmd += ' AND p.path'
+            cmd += ' < ' if data['desc'] else ' > '
+            cmd += '(SELECT path FROM posts WHERE id = ' + data['since'].__str__() + ')'
+
+        order = 'DESC' if data['desc'] else 'ASC'
+        cmd += ' ORDER BY p.path ' + order + ', p.id LIMIT ' + data['limit']
+
+        print(cmd)
+        db_service.execute(cmd)
+        result = db_service.get_all()
+        for post in result:
+            post['created'] = time_to_str(post['created'])
+        return result
 
 thread_service = ThreadService()

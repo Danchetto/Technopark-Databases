@@ -19,6 +19,9 @@ urls = [
     (r"/thread/(?P<slug_or_id>[^/]+?)/create", PostCreateHandler),
     (r"/thread/(?P<slug_or_id>[^/]+?)/details", ThreadDetailsHandler),
     (r"/thread/(?P<slug_or_id>[^/]+?)/vote", ThreadVoteHandler),
+    (r"/thread/(?P<slug_or_id>[^/]+?)/posts", ThreadPostsHandler),
+
+    (r"/post/(?P<id>[^/]+?)/details", PostDetailsHandler),
 
     (r"/service/clear", ClearHandler),
     (r"/service/status", StatusHandler),

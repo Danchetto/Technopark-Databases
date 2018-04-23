@@ -17,6 +17,12 @@ class DataBase:
         self.cur.execute(cmd)
         self.conn.commit()
 
+    def execute_only(self, cmd):
+        self.cur.execute(cmd)
+
+    def commit(self):
+        self.conn.commit()
+
     def get_all(self):
         return self.cur.fetchall()
 

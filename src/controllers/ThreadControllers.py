@@ -80,7 +80,6 @@ class ThreadVoteHandler(tornado.web.RequestHandler):
         try:
             thread_id = int(slug_or_id)
             thread_found = thread_service.check_by_id(thread_id)
-
         except:
             slug = slug_or_id
             thread_found = thread_service.check_by_slug(slug)
@@ -95,13 +94,64 @@ class ThreadVoteHandler(tornado.web.RequestHandler):
         self.set_status(200)
         data.update({'vote': data['voice']})
         errors = thread_service.check_to_vote(data)
-        if errors['found'] and not errors['conflict']:
-            data['vote'] = -2 if data['vote'] == -1 else 2
+
         if errors['conflict']:
             thread = thread_service.get_thread_by_id(thread_id)
             self.write(tornado.escape.json_encode(thread))
             return
-        thread_service.vote(data)
+        if errors['found'] and not errors['conflict']:
+            data['vote'] = -2 if data['vote'] == -1 else 2
+            thread_service.update_vote(data)
+        else:
+            thread_service.vote(data)
         thread = thread_service.get_thread_by_id(thread_id)
         self.write(tornado.escape.json_encode(thread))
+        return
+
+class ThreadPostsHandler(tornado.web.RequestHandler):
+    def get(self, slug_or_id):
+        self.set_header("Content-Type", "application/json")
+        try:
+            thread_id = int(slug_or_id)
+            thread_found = thread_service.check_by_id(thread_id)
+        except:
+            slug = slug_or_id
+            thread_found = thread_service.check_by_slug(slug)
+            thread_id = thread_service.get_thread_by_slug(slug)['id']
+
+        if not thread_found['conflict']:
+            self.set_status(404)
+            self.write(tornado.escape.json_encode({'message': 'not found'}))
+            return
+
+        try:
+            limit = self.get_argument('limit')
+        except:
+            limit = None
+
+        try:
+            since = self.get_argument('since')
+        except:
+            since = None
+
+        try:
+            sort = self.get_argument('sort')
+        except:
+            sort = None
+
+        try:
+            desc = True if self.get_argument('desc') == 'true' else False
+        except:
+            desc = False
+
+        result = {}
+        data = {'id': thread_id, 'limit': limit, 'since': since, 'desc': desc}
+
+        if sort == 'flat':
+            result = thread_service.get_posts_flat(data)
+        elif sort == 'tree':
+            result = thread_service.get_posts_tree(data)
+
+        self.set_status(200)
+        self.write(tornado.escape.json_encode(result))
         return

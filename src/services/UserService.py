@@ -30,7 +30,6 @@ class UserService:
                     nickname=data['nickname'])
 
         db_service.execute(cmd)
-        db_service.reconnect()
 
         return self.get_user(data['nickname'])
 
