@@ -70,25 +70,42 @@ class ThreadDetailsHandler(tornado.web.RequestHandler):
             return
 
         self.set_status(200)
-        self.write(tornado.escape.json_encode(thread_service.update(data)))
+        if 'message' in data.keys() or 'title' in data.keys():
+            self.write(tornado.escape.json_encode(thread_service.update(data)))
+            return
+        if data['id'] is not False:
+            self.write(tornado.escape.json_encode(thread_service.get_thread_by_id(data['id'])))
+        else:
+            self.write(tornado.escape.json_encode(thread_service.get_thread_by_slug(data['slug'])))
+        return
+
+
 
 
 class ThreadVoteHandler(tornado.web.RequestHandler):
     def post(self, slug_or_id):
         self.set_header("Content-Type", "application/json")
         data = tornado.escape.json_decode(self.request.body)
-        try:
-            thread_id = int(slug_or_id)
-            thread_found = thread_service.check_by_id(thread_id)
-        except:
-            slug = slug_or_id
-            thread_found = thread_service.check_by_slug(slug)
-            thread_id = thread_service.get_thread_by_slug(slug)['id']
-
-        if not thread_found['conflict']:
+        if thread_service.check_errors_vote(data)['user_not_found']:
             self.set_status(404)
             self.write(tornado.escape.json_encode({'message': 'not found'}))
             return
+
+        try:
+            thread_id = int(slug_or_id)
+            thread_found = thread_service.check_by_id(thread_id)
+            if not thread_found['conflict']:
+                self.set_status(404)
+                self.write(tornado.escape.json_encode({'message': 'not found'}))
+                return
+        except:
+            slug = slug_or_id
+            thread_found = thread_service.check_by_slug(slug)
+            if not thread_found['conflict']:
+                self.set_status(404)
+                self.write(tornado.escape.json_encode({'message': 'not found'}))
+                return
+            thread_id = thread_service.get_thread_by_slug(slug)['id']
 
         data.update({'thread': thread_id})
         self.set_status(200)
@@ -112,12 +129,18 @@ class ThreadVoteHandler(tornado.web.RequestHandler):
 class ThreadPostsHandler(tornado.web.RequestHandler):
     def get(self, slug_or_id):
         self.set_header("Content-Type", "application/json")
+
         try:
             thread_id = int(slug_or_id)
             thread_found = thread_service.check_by_id(thread_id)
+
         except:
             slug = slug_or_id
             thread_found = thread_service.check_by_slug(slug)
+            if not thread_found['conflict']:
+                self.set_status(404)
+                self.write(tornado.escape.json_encode({'message': 'not found'}))
+                return
             thread_id = thread_service.get_thread_by_slug(slug)['id']
 
         if not thread_found['conflict']:

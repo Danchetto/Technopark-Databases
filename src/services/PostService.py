@@ -35,16 +35,16 @@ class PostService:
             result['post']['created'] = time_to_str(result['post']['created'])
             result['post']['isEdited'] = result['post']['isedited']
 
-        if 'author' in data['related']:
+        if 'user' in data['related']:
             cmd += """SELECT u.email, u.about, u.nickname, u.fullname
-                      FROM users u JOIN posts p ON p.author = u.nickname WHERE p.id = {id}';
+                      FROM users u JOIN posts p ON p.author = u.nickname WHERE p.id = {id};
                     """.format(**data)
             db_service.execute(cmd)
             result.update({"author": db_service.get_one()})
 
         if 'thread' in data['related']:
             cmd += """SELECT t.author, t.created, t.forum, t.id, t.message, t.slug, t.title, t.votes
-                      FROM threads t JOIN posts p ON p.thread = t.id WHERE p.id = {id}';
+                      FROM threads t JOIN posts p ON p.thread = t.id WHERE p.id = {id};
                     """.format(**data)
             db_service.execute(cmd)
             result.update({"thread": db_service.get_one()})
@@ -52,13 +52,15 @@ class PostService:
                 result['thread']['created'] = time_to_str(result['thread']['created'])
 
         if 'forum' in data['related']:
-            cmd += """SELECT f.slug, f.posts, f.threads, f.title, f.user
-                      FROM forum f JOIN posts p ON p.forum = f.slug WHERE p.id = {id}' ;
+            cmd += """SELECT f.slug, f.posts, f.threads, f.title, f.author
+                      FROM forums f JOIN posts p ON p.forum = f.slug WHERE p.id = {id};
                     """.format(**data)
             db_service.execute(cmd)
             result.update({"forum": db_service.get_one()})
             if 'created' in result['forum'].keys() and result['forum']['created'] is not None:
                 result['forum']['created'] = time_to_str(result['forum']['created'])
+            result['forum']['user'] = result['forum']['author']
+            result['forum'].pop('author')
 
         return result
 
@@ -81,7 +83,7 @@ class PostService:
 
     def update(self, data):
         cmd = """UPDATE posts SET {message_data} isEdited = TRUE WHERE id = {id};
-""".format(message_data="message='" + data['message'] + "'," if 'message' in data.keys() else '', **data)
+""".format(message_data="message='" + data['message'] + "',", **data)
 
         db_service.execute(cmd)
         return self.get_post_by_id(data['id'])

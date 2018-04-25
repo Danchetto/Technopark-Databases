@@ -72,7 +72,7 @@ class PostDetailsHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json")
 
         try:
-            related = self.get_argument('related')
+            related = (self.get_argument('related').split(','))
         except:
             related = []
         errors = post_service.check_not_found({'id': id})
@@ -82,7 +82,6 @@ class PostDetailsHandler(tornado.web.RequestHandler):
             self.write(tornado.escape.json_encode({'message': 'not found'}))
             return
         self.set_status(200)
-        # post = post_service.get_post_by_id(id)
         data = {'id': id, 'related': related}
         self.write(tornado.escape.json_encode(post_service.details(data)))
         return
@@ -97,8 +96,10 @@ class PostDetailsHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(tornado.escape.json_encode({'message': 'not found'}))
             return
-
+        post = post_service.get_post_by_id(data['id'])
         self.set_status(200)
-
-        self.write(tornado.escape.json_encode(post_service.update(data)))
+        if len(data.keys()) == 1 or data['message'] == post['message']:
+            self.write(tornado.escape.json_encode(post))
+        else:
+            self.write(tornado.escape.json_encode(post_service.update(data)))
         return

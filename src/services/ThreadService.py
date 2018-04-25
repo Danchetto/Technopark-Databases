@@ -78,6 +78,15 @@ class ThreadService:
 
         return db_service.get_one()
 
+    def check_errors_vote(self, data):
+        cmd = """SELECT CASE WHEN 
+                        (SELECT nickname FROM users u WHERE LOWER(u.nickname) = LOWER('{nickname}') LIMIT 1)
+                        IS NOT NULL THEN FALSE ELSE TRUE END AS "user_not_found";
+                        """.format(**data)
+        db_service.execute(cmd)
+
+        return db_service.get_one()
+
     def check_by_slug(self, slug):
         cmd = """SELECT CASE WHEN
                     (SELECT slug FROM threads t WHERE t.slug = '{slug}' LIMIT 1) 
