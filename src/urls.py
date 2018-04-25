@@ -15,6 +15,7 @@ urls = [
     (r"/forum/(?P<slug>[^/]+?)/create", ThreadCreateHandler),
     (r"/forum/(?P<slug>[^/]+?)/details", ForumDetailsHandler),
     (r"/forum/(?P<slug>[^/]+?)/threads", ForumThreadsHandler),
+    (r"/forum/(?P<slug>[^/]+?)/users", ForumUsersHandler),
 
     (r"/thread/(?P<slug_or_id>[^/]+?)/create", PostCreateHandler),
     (r"/thread/(?P<slug_or_id>[^/]+?)/details", ThreadDetailsHandler),

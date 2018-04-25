@@ -29,8 +29,8 @@ class ForumService:
     def create(self, data):
         author = user_service.get_user(data['user'])['nickname']
         db_service.reconnect()
-        cmd = """INSERT INTO forums (slug, title, author)
-                        VALUES ('{slug}', '{title}', '{username}') RETURNING *;
+        cmd = """INSERT INTO forums (slug, title, author, posts, threads)
+                        VALUES ('{slug}', '{title}', '{username}', 0, 0) RETURNING *;
         """.format(**data, username=author)
 
         db_service.execute(cmd)
@@ -50,7 +50,8 @@ class ForumService:
             cmd += "'" + data['since'] + "'"
 
         order = 'DESC' if data['desc'] else 'ASC'
-        cmd += ' ORDER BY t.created ' + order + ' LIMIT ' + data['limit']
+        cmd += ' ORDER BY t.created ' + order
+        cmd += ' LIMIT ' + data['limit'] if data['limit'] else ''
 
         db_service.execute(cmd)
         result = db_service.get_all()
@@ -60,31 +61,28 @@ class ForumService:
         return result
 
     def get_forum_users(self, data):
-        cmd = """SELECT u.nickname  FROM users u
-                JOIN threads t ON u.nickname = f.author
-                JOIN posts p ON u.nickname = p.author
-                WHERE t.forum = '{slug}' OR p.forum = '{slug}'                               
+        cmd = """SELECT u.* FROM users u
+                JOIN forum_users fu ON LOWER(u.nickname) = LOWER(fu.user_nickname)
+                WHERE LOWER(fu.forum) = LOWER('{slug}')                               
         """.format(**data)
 
         if data['since']:
-            cmd += 'AND t.created'
-            cmd += '<=' if data['desc'] else '>='
-            cmd += "'" + data['since'] + "'"
+            cmd += 'AND LOWER(u.nickname)'
+            cmd += '<' if data['desc'] else '>'
+            cmd += "LOWER('" + data['since'] + "')"
 
         order = 'DESC' if data['desc'] else 'ASC'
-        cmd += ' ORDER BY t.created ' + order + 'LIMIT' + data['limit']
+        cmd += ' ORDER BY LOWER(u.nickname) ' + order
+        cmd += ' LIMIT ' + data['limit'] if data['limit'] else ''
 
         db_service.execute(cmd)
         result = db_service.get_all()
-        for thread in result:
-            thread['created'] = time_to_str(thread['created'])
+
         return result
 
-
     def check_errors(self, data):
-        db_service.reconnect()
         cmd = """SELECT CASE WHEN
-                    (SELECT slug FROM forums f WHERE f.slug = '{slug}'  LIMIT 1) 
+                    (SELECT slug FROM forums f WHERE f.slug = '{slug}' LIMIT 1) 
                     IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict",
                     CASE WHEN 
                     (SELECT nickname FROM users u WHERE LOWER(u.nickname) = LOWER('{user}') LIMIT 1)
@@ -93,7 +91,6 @@ class ForumService:
 
         db_service.execute(cmd)
         result = db_service.get_one()
-        db_service.reconnect()
         return result
 
 forum_service = ForumService()

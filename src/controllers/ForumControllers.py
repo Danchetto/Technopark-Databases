@@ -44,7 +44,7 @@ class ForumThreadsHandler(tornado.web.RequestHandler):
         try:
             limit = self.get_argument('limit')
         except:
-            limit = None
+            limit = False
 
         try:
             since = self.get_argument('since')
@@ -62,6 +62,37 @@ class ForumThreadsHandler(tornado.web.RequestHandler):
         if errors['conflict']:
             self.set_status(200)
             threads = forum_service.get_forum_threads(data)
+            self.write(tornado.escape.json_encode(threads))
+            return
+        self.set_status(404)
+        self.write(tornado.escape.json_encode({'message': 'forum not found'}))
+
+
+class ForumUsersHandler(tornado.web.RequestHandler):
+    def get(self, slug):
+        self.set_header("Content-Type", "application/json")
+
+        try:
+            limit = self.get_argument('limit')
+        except:
+            limit = ''
+
+        try:
+            since = self.get_argument('since')
+        except:
+            since = None
+
+        try:
+            desc = True if self.get_argument('desc') == 'true' else False
+        except:
+            desc = False
+
+        data = {'slug': slug, 'limit': limit, 'since': since, 'desc': desc, 'user': ''}
+        errors = forum_service.check_errors(data)
+
+        if errors['conflict']:
+            self.set_status(200)
+            threads = forum_service.get_forum_users(data)
             self.write(tornado.escape.json_encode(threads))
             return
         self.set_status(404)

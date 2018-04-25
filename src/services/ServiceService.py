@@ -2,31 +2,27 @@ from src.DataBase import db_service
 
 class ServiceService:
     def clear(self):
-        db_service.reconnect()
-        cmd = '''TRUNCATE TABLE users CASCADE;
-                TRUNCATE TABLE posts CASCADE;
-                TRUNCATE TABLE forums CASCADE;
-                TRUNCATE TABLE threads CASCADE;'''
+        cmd = 'TRUNCATE TABLE users, forums, threads, posts, votes, forum_users;'
         db_service.execute(cmd)
         return
 
     def status(self):
         result = {}
-        cmd = 'SELECT COUNT(*) FROM users;'
+        cmd = 'SELECT COUNT(*) AS user FROM users;'
         db_service.execute(cmd)
-        result.update({'user': db_service.get_one()['count']})
+        result.update(db_service.get_one())
 
-        cmd = 'SELECT COUNT(*) FROM posts;'
+        cmd = 'SELECT COUNT(*) AS post FROM posts;'
         db_service.execute(cmd)
-        result.update({'post': db_service.get_one()['count']})
+        result.update(db_service.get_one())
 
-        cmd = 'SELECT COUNT(*) FROM forums;'
+        cmd = 'SELECT COUNT(*) AS forum FROM forums;'
         db_service.execute(cmd)
-        result.update({'forum': db_service.get_one()['count']})
+        result.update(db_service.get_one())
 
-        cmd = 'SELECT COUNT(*) FROM threads;'
+        cmd = 'SELECT COUNT(*) AS thread FROM threads;'
         db_service.execute(cmd)
-        result.update({'thread': db_service.get_one()['count']})
+        result.update(db_service.get_one())
 
         return result
 

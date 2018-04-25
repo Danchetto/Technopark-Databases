@@ -57,11 +57,11 @@ class ThreadDetailsHandler(tornado.web.RequestHandler):
 
         try:
             thread_id = int(slug_or_id)
-            data.update({'id': thread_id})
+            data.update({'id': thread_id, 'slug': False})
             errors = thread_service.check_by_id(thread_id)
         except:
             slug = slug_or_id
-            data.update({'slug': slug})
+            data.update({'slug': slug, 'id': False})
             errors = thread_service.check_by_slug(slug)
 
         if not errors['conflict']:
@@ -108,6 +108,7 @@ class ThreadVoteHandler(tornado.web.RequestHandler):
         self.write(tornado.escape.json_encode(thread))
         return
 
+
 class ThreadPostsHandler(tornado.web.RequestHandler):
     def get(self, slug_or_id):
         self.set_header("Content-Type", "application/json")
@@ -137,7 +138,7 @@ class ThreadPostsHandler(tornado.web.RequestHandler):
         try:
             sort = self.get_argument('sort')
         except:
-            sort = None
+            sort = ''
 
         try:
             desc = True if self.get_argument('desc') == 'true' else False
@@ -145,13 +146,16 @@ class ThreadPostsHandler(tornado.web.RequestHandler):
             desc = False
 
         result = {}
-        data = {'id': thread_id, 'limit': limit, 'since': since, 'desc': desc}
+        data = {'thread': thread_id, 'limit': limit, 'since': since, 'desc': desc}
 
-        if sort == 'flat':
+        if sort == 'flat' or sort == '':
             result = thread_service.get_posts_flat(data)
         elif sort == 'tree':
             result = thread_service.get_posts_tree(data)
+        elif sort == 'parent_tree':
+            result = thread_service.get_posts_parent_tree(data)
 
         self.set_status(200)
         self.write(tornado.escape.json_encode(result))
         return
+
