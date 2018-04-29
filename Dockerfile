@@ -69,5 +69,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 ADD . /db_technopark
 WORKDIR /db_technopark
 
+RUN chmod +x ./start.sh
 ENTRYPOINT ["./start.sh"]
 
