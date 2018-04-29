@@ -1,5 +1,5 @@
 import tornado.web, tornado.escape
-from src.services.ServiceService import service_service
+from services.ServiceService import service_service
 
 class ClearHandler(tornado.web.RequestHandler):
     def post(self):

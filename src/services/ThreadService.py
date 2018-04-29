@@ -1,5 +1,5 @@
-from src.DataBase import db_service
-from src.tools.datetime import time_to_str
+from DataBase import db_service
+from tools.datetime import time_to_str
 
 class ThreadService:
     def get_thread_by_id(self, id):
@@ -173,7 +173,7 @@ class ThreadService:
                 cmd += ' < ' if data['desc'] else ' > '
                 cmd += '(SELECT path[1] FROM posts WHERE id = ' + data['since'].__str__() + ')'
 
-            order = 'DESC' if data['desc'] else 'ASC'
+            # order = 'DESC' if data['desc'] else 'ASC'
             cmd += ' ORDER BY p.path, p.id'
 
             db_service.execute(cmd)

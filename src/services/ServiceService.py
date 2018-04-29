@@ -1,4 +1,4 @@
-from src.DataBase import db_service
+from DataBase import db_service
 
 class ServiceService:
     def clear(self):

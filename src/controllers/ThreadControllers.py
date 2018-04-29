@@ -1,6 +1,8 @@
 import tornado.web, tornado.escape
-from src.services.ThreadService import thread_service
-from src.services.ForumService import forum_service
+from services.ThreadService import thread_service
+from services.ForumService import forum_service
+import json
+from tools.datetime import DateTimeEncoder
 
 class ThreadCreateHandler(tornado.web.RequestHandler):
     def post(self, slug):
@@ -179,6 +181,6 @@ class ThreadPostsHandler(tornado.web.RequestHandler):
             result = thread_service.get_posts_parent_tree(data)
 
         self.set_status(200)
-        self.write(tornado.escape.json_encode(result))
-        return
+        self.write(json.dumps(result, cls=DateTimeEncoder))
+        # return result, 200
 

@@ -1,29 +1,26 @@
-from src.controllers.UserControllers import *
-from src.controllers.ForumControllers import *
-from src.controllers.ThreadControllers import *
-from src.controllers.PostControllers import *
-from src.controllers.ServiceControllers import *
-from . import MainHandler
+from controllers.UserControllers import *
+from controllers.ForumControllers import *
+from controllers.ThreadControllers import *
+from controllers.PostControllers import *
+from controllers.ServiceControllers import *
 
 urls = [
-    (r"/", MainHandler),
+    (r"/api/user/(?P<nickname>[^/]+?)/create", UserCreateHandler),
+    (r"/api/user/(?P<nickname>[^/]+?)/profile", UserProfileHandler),
 
-    (r"/user/(?P<nickname>[^/]+?)/create", UserCreateHandler),
-    (r"/user/(?P<nickname>[^/]+?)/profile", UserProfileHandler),
+    (r"/api/forum/create", ForumCreateHandler),
+    (r"/api/forum/(?P<slug>[^/]+?)/create", ThreadCreateHandler),
+    (r"/api/forum/(?P<slug>[^/]+?)/details", ForumDetailsHandler),
+    (r"/api/forum/(?P<slug>[^/]+?)/threads", ForumThreadsHandler),
+    (r"/api/forum/(?P<slug>[^/]+?)/users", ForumUsersHandler),
 
-    (r"/forum/create", ForumCreateHandler),
-    (r"/forum/(?P<slug>[^/]+?)/create", ThreadCreateHandler),
-    (r"/forum/(?P<slug>[^/]+?)/details", ForumDetailsHandler),
-    (r"/forum/(?P<slug>[^/]+?)/threads", ForumThreadsHandler),
-    (r"/forum/(?P<slug>[^/]+?)/users", ForumUsersHandler),
+    (r"/api/thread/(?P<slug_or_id>[^/]+?)/create", PostCreateHandler),
+    (r"/api/thread/(?P<slug_or_id>[^/]+?)/details", ThreadDetailsHandler),
+    (r"/api/thread/(?P<slug_or_id>[^/]+?)/vote", ThreadVoteHandler),
+    (r"/api/thread/(?P<slug_or_id>[^/]+?)/posts", ThreadPostsHandler),
 
-    (r"/thread/(?P<slug_or_id>[^/]+?)/create", PostCreateHandler),
-    (r"/thread/(?P<slug_or_id>[^/]+?)/details", ThreadDetailsHandler),
-    (r"/thread/(?P<slug_or_id>[^/]+?)/vote", ThreadVoteHandler),
-    (r"/thread/(?P<slug_or_id>[^/]+?)/posts", ThreadPostsHandler),
+    (r"/api/post/(?P<id>[^/]+?)/details", PostDetailsHandler),
 
-    (r"/post/(?P<id>[^/]+?)/details", PostDetailsHandler),
-
-    (r"/service/clear", ClearHandler),
-    (r"/service/status", StatusHandler),
+    (r"/api/service/clear", ClearHandler),
+    (r"/api/service/status", StatusHandler),
 ]

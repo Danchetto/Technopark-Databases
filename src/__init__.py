@@ -1,1 +1,2 @@
-from src.controllers import *
+from ..controllers import *
+from ..urls import *

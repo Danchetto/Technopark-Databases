@@ -1,6 +1,6 @@
-from src.DataBase import db_service
-from ..services.UserService import user_service
-from ..tools.datetime import normalize_time, time_to_db_str, time_to_str
+from DataBase import db_service
+from services.UserService import user_service
+from tools.datetime import normalize_time, time_to_str
 
 
 class ForumService:

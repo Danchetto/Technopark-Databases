@@ -1,5 +1,5 @@
 import tornado.web, tornado.escape
-from src.services.ForumService import forum_service
+from services.ForumService import forum_service
 
 class ForumCreateHandler(tornado.web.RequestHandler):
     def post(self):
@@ -24,18 +24,23 @@ class ForumCreateHandler(tornado.web.RequestHandler):
 
 class ForumDetailsHandler(tornado.web.RequestHandler):
     def get(self, slug):
-        self.set_header("Content-Type", "application/json")
-        data = {'slug': slug, 'user': '', 'title': ''}
-        errors = forum_service.check_errors(data)
+        try:
+            self.set_header("Content-Type", "application/json")
+            data = {'slug': slug, 'user': '', 'title': ''}
+            errors = forum_service.check_errors(data)
 
-        if errors['conflict']:
-            self.set_status(200)
-            forum = forum_service.get_forum_by_slug(data['slug'])
-            print(forum)
-            self.write(tornado.escape.json_encode(forum))
-            return
-        self.set_status(404)
-        self.write(tornado.escape.json_encode({'message': 'forum not found'}))
+            if errors['conflict']:
+                self.set_status(200)
+                forum = forum_service.get_forum_by_slug(data['slug'])
+                print(forum)
+                self.write(tornado.escape.json_encode(forum))
+                return
+            self.set_status(404)
+            self.write(tornado.escape.json_encode({'message': 'forum not found'}))
+        except Exception as err:
+            self.set_header("Content-Type", "application/json")
+            self.set_status(404)
+            self.write(tornado.escape.json_encode({'message': err}))
 
 class ForumThreadsHandler(tornado.web.RequestHandler):
     def get(self, slug):

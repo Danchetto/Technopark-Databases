@@ -1,5 +1,5 @@
-from src.DataBase import db_service
-from src.tools.datetime import time_to_str
+from DataBase import db_service
+from tools.datetime import time_to_str
 
 class PostService:
     def get_next_id(self):
@@ -18,8 +18,8 @@ class PostService:
 
         db_service.execute(cmd)
         result = db_service.get_one()
-        if 'created' in result.keys() and result['created'] is not None:
-            result['created'] = time_to_str(result['created'])
+        # if 'created' in result.keys() and result['created'] is not None:
+        #     result['created'] = time_to_str(result['created'])
         result['isEdited'] = result['isedited']
         result.pop('isedited')
 
@@ -31,9 +31,9 @@ class PostService:
         """.format(**data)
         db_service.execute(cmd)
         result = {"post": db_service.get_one()}
-        if 'created' in result['post'].keys() and result['post']['created'] is not None:
-            result['post']['created'] = time_to_str(result['post']['created'])
-            result['post']['isEdited'] = result['post']['isedited']
+        # if 'created' in result['post'].keys() and result['post']['created'] is not None:
+        #     result['post']['created'] = time_to_str(result['post']['created'])
+        result['post']['isEdited'] = result['post']['isedited']
 
         if 'user' in data['related']:
             cmd += """SELECT u.email, u.about, u.nickname, u.fullname
@@ -72,8 +72,8 @@ class PostService:
 
         db_service.execute_only(cmd)
         result = db_service.get_one()
-        if 'created' in result.keys() and result['created'] is not None:
-            result['created'] = time_to_str(result['created'])
+        # if 'created' in result.keys() and result['created'] is not None:
+        #     result['created'] = time_to_str(result['created'])
 
         db_service.execute("""INSERT INTO forum_users (user_nickname, forum) SELECT '{author}', '{forum}' 
                                   WHERE NOT EXISTS (SELECT forum FROM forum_users WHERE LOWER(user_nickname) = LOWER('{author}') AND forum = '{forum}');

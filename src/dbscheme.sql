@@ -40,7 +40,7 @@ CREATE TABLE threads
 CREATE TABLE posts (
   id        SERIAL                      NOT NULL PRIMARY KEY,
   author    VARCHAR                     NOT NULL REFERENCES users(nickname),
-  created   TIMESTAMP WITH TIME ZONE    DEFAULT current_timestamp,
+  created   TIMESTAMP WITH TIME ZONE,
   forum     CITEXT REFERENCES forums(slug),
   isEdited  BOOLEAN                     DEFAULT FALSE,
   message   TEXT                        NOT NULL,

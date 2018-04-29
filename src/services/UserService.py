@@ -1,4 +1,4 @@
-from src.DataBase import db_service
+from DataBase import db_service
 
 class UserService:
     def get_users_by_email_or_nick(self, data):

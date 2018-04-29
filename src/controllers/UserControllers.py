@@ -1,5 +1,5 @@
 import tornado.web, tornado.escape
-from src.services.UserService import user_service
+from services.UserService import user_service
 
 class UserCreateHandler(tornado.web.RequestHandler):
     def post(self, nickname):

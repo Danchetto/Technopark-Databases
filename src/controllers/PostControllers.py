@@ -1,11 +1,14 @@
 import tornado.web, tornado.escape
-from datetime import datetime
-from src.services.ThreadService import thread_service
-from src.services.PostService import post_service
-from src.DataBase import db_service
+import json
+from services.ThreadService import thread_service
+from services.PostService import post_service
+from DataBase import db_service
+from tools.datetime import get_time, DateTimeEncoder
+# import arrow
 
 class PostCreateHandler(tornado.web.RequestHandler):
     def post(self, slug_or_id):
+        created = get_time()
         self.set_header("Content-Type", "application/json")
         data = tornado.escape.json_decode(self.request.body)
         try:
@@ -22,8 +25,6 @@ class PostCreateHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(tornado.escape.json_encode({'message': 'not found'}))
             return
-
-        created = (datetime.now())
 
         forum = thread_service.get_thread_by_id(thread_id)['forum']
         result = []
@@ -64,7 +65,8 @@ class PostCreateHandler(tornado.web.RequestHandler):
 
         db_service.commit()
         self.set_status(201)
-        self.write(tornado.escape.json_encode(result))
+        self.write(json.dumps(result, cls=DateTimeEncoder))
+        return
 
 
 class PostDetailsHandler(tornado.web.RequestHandler):
@@ -83,7 +85,7 @@ class PostDetailsHandler(tornado.web.RequestHandler):
             return
         self.set_status(200)
         data = {'id': id, 'related': related}
-        self.write(tornado.escape.json_encode(post_service.details(data)))
+        self.write(json.dumps((post_service.details(data)), cls=DateTimeEncoder))
         return
 
     def post(self, id):
@@ -99,7 +101,6 @@ class PostDetailsHandler(tornado.web.RequestHandler):
         post = post_service.get_post_by_id(data['id'])
         self.set_status(200)
         if len(data.keys()) == 1 or data['message'] == post['message']:
-            self.write(tornado.escape.json_encode(post))
+            self.write(json.dumps((post), cls=DateTimeEncoder))
         else:
-            self.write(tornado.escape.json_encode(post_service.update(data)))
-        return
+            self.write(json.dumps((post_service.update(data)), cls=DateTimeEncoder))
